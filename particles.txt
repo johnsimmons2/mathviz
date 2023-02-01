@@ -1,0 +1,25 @@
+What kind of particles are there?
+
+Eras:
+I. Singularity
+II. Post-Singularity
+III. Dark Ages
+IV. Current Era
+
+1. The universe was a singular point, up to the first picosecond.
+2. The universe creates the first fundamental interactions
+
+
+
+
+
+
+
+electron             -1
+
+neutrino              0
+antineutrino          0
+
+positron             +1
+
+e+p=n+a
