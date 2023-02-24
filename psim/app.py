@@ -21,9 +21,9 @@ def start():
     pg.display.set_caption("MathViz")
 
     sim = ps.Simulation()
-    fieldsim = ps.FieldSimulation(100)
+    fieldsim = ps.FieldSimulation(120)
     vf2.attach(fieldsim)
-    vf2.setFPS(10)
+    vf2.setFPS(5)
     vf1.attach(sim)
     state = True
     views = [vf1, vf2]
@@ -35,12 +35,8 @@ def start():
             VIEW = views[1]
         SCREEN = VIEW.display
         SCREEN.fill((255,255,255))
-        VIEW.update()
-        stats = sim.update()
-        text = VIEW.font.render(f'[View: ({1 if state else 2})] {len(VIEW.entities)} Vm={"{:.2f}".format(stats[0])} VM={"{:.2f}".format(stats[1])} Va={"{:.2f}".format(stats[2])} AvgP=({"{:.2f}".format(stats[3])}, {"{:.2f}".format(stats[4])})', True, (0,0,0))
-        SCREEN.blit(text, (5, ps.getDims()[1]-25))
-        text = VIEW.font.render(f'{"{:.2f}".format(VIEW.FPSClock.get_fps())} FPS', True, (0, 0, 0))
-        SCREEN.blit(text, (5, ps.getDims()[1]-50))
+        stats = VIEW.update()
+        displayStats(state, stats)
         for event in pg.event.get():
             if event.type == QUIT:
                 pg.quit()
@@ -60,6 +56,15 @@ def start():
                     state = not state
 
         pg.display.update()
+
+def displayStats(state, stats):
+    if stats != None:
+        stats = stats[0]
+        text = VIEW.font.render(f'[View: ({1 if state else 2})] {len(VIEW.entities)} Vm={"{:.2f}".format(stats[0])} VM={"{:.2f}".format(stats[1])} Va={"{:.2f}".format(stats[2])} AvgP=({"{:.2f}".format(stats[3])}, {"{:.2f}".format(stats[4])})', True, (0,0,0))
+        SCREEN.blit(text, (5, ps.getDims()[1]-25))
+    text = VIEW.font.render(f'{"{:.2f}".format(VIEW.FPSClock.get_fps())} FPS', True, (0, 0, 0))
+    SCREEN.blit(text, (5, ps.getDims()[1]-50))
+
 
 def getScreen():
     global SCREEN

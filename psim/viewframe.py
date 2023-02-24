@@ -6,17 +6,16 @@ class ViewFrame:
     def __init__(self, width = None, height = None, fps = 144):
         pg.font.init()
         if width and height:
-            self.FPSClock = pg.time.Clock()
-            self.font = pg.font.Font('freesansbold.ttf', 16)
-            self.entities: list[Entity] = []
+            self.width = width
+            self.height = height
         else:
-            width = 1920
-            height = 1080
-            self.FPSClock = pg.time.Clock()
-            self.font = pg.font.Font('freesansbold.ttf', 16)
-            self.entities: list[Entity] = []
+            self.width = 1920
+            self.height = 1080
+        self.FPSClock = pg.time.Clock()
+        self.font = pg.font.Font('freesansbold.ttf', 16)
+        self.entities: list[Entity] = []
         self.fps = fps
-        self.display = pg.display.set_mode((width, height))
+        self.display = pg.display.set_mode((self.width, self.height))
 
     def setEntities(self, ents):
         self.entities = ents
@@ -28,7 +27,11 @@ class ViewFrame:
         self.fps = fps
 
     def update(self):
+        stats = []
         for entity in self.entities:
-            entity.update()
+            stat = entity.update()
+            if stat != None:
+                stats.append(stat)
             entity.display()
-            self.FPSClock.tick(self.fps)
+        self.FPSClock.tick(self.fps)
+        return stats if len(stats) > 0 else None

@@ -201,7 +201,7 @@ class Field:
         return index
     
     def _translate_to_local(self, vec: Vector):
-        return Vector2D(round(vec[0]/self.resolution), round(vec[1]/self.resolution))
+        return Vector2D(math.floor(vec[0]/self.resolution), math.floor(vec[1]/self.resolution))
 
     def insert(self, position: Vector, object):
         posSize = len(position)
@@ -222,22 +222,23 @@ class Field:
         if val + 1 < len(self._field):
             toCheck.append(val)
         val = index - self._adj_dims[0]
-        if val > 0:
+        if val >= 0:
             toCheck.append(val)
     
         # Left and Right
         if index % self._adj_dims[0] != 0:
             toCheck.append(index - 1)
             val = index - 1 - self._adj_dims[0]
-            if val > 0:
+            if val >= 0:
                 toCheck.append(val)
             val = index - 1 + self._adj_dims[0]
             if val + 1 < len(self._field):
                 toCheck.append(val)
+
         if index % self._adj_dims[0] != self._adj_dims[0] - 1:
             toCheck.append(index + 1)
             val = index + 1 - self._adj_dims[0]
-            if val > 0:
+            if val >= 0:
                 toCheck.append(val)
             val = index + 1 + self._adj_dims[0]
             if val + 1 < len(self._field):
@@ -246,11 +247,12 @@ class Field:
 
     # Attempts to get value of vector 
     def valueAt(self, vec: Vector):
-        if vec[0] > self.dims[0] or vec[1] > self.dims[1]:
-            return None
-        index = self._get_local_position(self._translate_to_local(vec))
-        val = self._field[index]
-        return (index, val)
+        if vec[0] <= self.dims[0] and vec[1] <= self.dims[1]:
+            index = self._get_local_position(self._translate_to_local(vec))
+            if index < len(self._field):
+                val = self._field[index]
+                return (index, val)
+        return None
 
     def getCoordsAt(self, index):
         return (index % self._adj_dims[0], (index // self._adj_dims[0]))

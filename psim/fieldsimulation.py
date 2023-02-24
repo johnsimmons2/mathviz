@@ -11,14 +11,46 @@ class Fieldling:
         self.position = pos
         self.velocity = vel
         self.alive = False
-        self.delta = False
         self.updates = 0
+        self.aliveneighbors = 0
     
+    def flip(self):
+        self.alive = not self.alive
+        self.updates += 1
+
     def die(self):
-        self.delta = True
+        self.alive = False
+        self.updates += 1
 
     def birth(self):
-        self.delta = True
+        self.alive = True
+        self.updates += 1
+
+    def getAliveNeighbors(self, curIndex, field):
+        toCheck = field.getNeighborIndices(curIndex)
+        numAlive = 0
+        for p in toCheck:
+            if field[p].alive:
+                numAlive += 1
+        return numAlive
+
+    @classmethod
+    def tryRule(cls, point, numAlive, updates):
+        if point.updates < updates:
+            return cls.conway(point, numAlive)
+        return point
+    
+    @classmethod
+    def conway(self, point, numAlive):
+        if point.alive:
+            if numAlive <= 1:
+                point.die()
+            elif numAlive >= 4:
+                point.die()
+        else:
+            if numAlive == 3:
+                point.birth()
+        return point
 
 class ParticleField(Field):
     def __init__(self, resolution):
@@ -33,6 +65,7 @@ class FieldSimulation(Entity):
         self.vecfield = ParticleField(resolution)
         self._debugmode = False
         self.paused = False
+        self.updates = 0
     
     def pause(self):
         if self.paused:
@@ -48,9 +81,9 @@ class FieldSimulation(Entity):
         wth = self.resolution
         for i, point in self.vecfield.get():
             if isinstance(point, Fieldling):
-                color[0] = 0
-                color[1] = 255 if point.alive else 0
-                color[2] = min(point.velocity.magnitude(), 255)
+                color[0] = min((255 / 9) * point.aliveneighbors, 255)
+                color[1] = 128 if point.alive else 0
+                color[2] = 0 # min(point.velocity.magnitude(), 255)
                 pt = point.position
                 dx = (pt[0]*wth)
                 dy = (pt[1]*wth)
@@ -65,30 +98,15 @@ class FieldSimulation(Entity):
     def update(self):
         if not self.paused:
             for i, point in self.vecfield.get():
-                toCheck = self.vecfield.getNeighborIndices(i)
-                numAlive = 0
-                if point.delta:
-                    point.alive = not point.alive
-                    point.delta = False
-                else:
-                    for p in toCheck:
-                        if self.vecfield[p].alive:
-                            numAlive += 1
-                    point = self.tryRule(point, numAlive)
+                if isinstance(point, Fieldling):
+                    point.aliveneighbors = point.getAliveNeighbors(i, self.vecfield)
+                    point = self.tryRule(point, point.aliveneighbors)
+        self.updates += 1
     
     def tryRule(self, point, numAlive):
-        if point.alive:
-            if numAlive <= 1:
-                point.die()
-            elif numAlive >= 4:
-                point.die()
-        else:
-            if numAlive == 3:
-                point.birth()
+        return Fieldling.tryRule(point, numAlive, self.updates)
             
-
     def clicked(self, dx, dy):
         i = self.vecfield.valueAt(Vector2D(dx, dy))
-        print(i)
-        self.vecfield[i[0]].alive = not self.vecfield[i[0]].alive
+        self.vecfield[i[0]].flip()
 
