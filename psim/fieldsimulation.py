@@ -63,17 +63,16 @@ class FieldSimulation(Entity):
         super().__init__(0, 0)
         self.resolution = resolution
         self.vecfield = ParticleField(resolution)
-        self._debugmode = False
         self.paused = False
         self.updates = 0
     
     def pause(self):
         if self.paused:
             self.paused = False
-            self._debugmode = False
+            self.debugmode = False
         else:
             self.paused = True
-            self._debugmode = True
+            self.debugmode = True
 
     # !Overriding Entity! #
     def display(self):
@@ -88,7 +87,7 @@ class FieldSimulation(Entity):
                 dx = (pt[0]*wth)
                 dy = (pt[1]*wth)
                 pg.draw.rect(ps.getScreen(), tuple(color), pg.rect.Rect(dx, dy, wth, wth))
-                if self._debugmode:
+                if self.debugmode:
                     txt = ps.getView().font.render(f'{pt}', True, (255,0,0))
                     ofsx = (wth/2) - txt.get_rect().width/2
                     ofsy = (wth/2) - txt.get_rect().height/2
@@ -96,17 +95,18 @@ class FieldSimulation(Entity):
 
     # !Overriding Entity! #
     def update(self):
-        if not self.paused:
-            for i, point in self.vecfield.get():
-                if isinstance(point, Fieldling):
-                    point.aliveneighbors = point.getAliveNeighbors(i, self.vecfield)
-                    point = self.tryRule(point, point.aliveneighbors)
+        for i, point in self.vecfield.get():
+            if isinstance(point, Fieldling):
+                point.aliveneighbors = point.getAliveNeighbors(i, self.vecfield)
+        for i, point in self.vecfield.get():
+            if isinstance(point, Fieldling):
+                point = self.tryRule(point, point.aliveneighbors)
         self.updates += 1
     
     def tryRule(self, point, numAlive):
         return Fieldling.tryRule(point, numAlive, self.updates)
             
-    def clicked(self, dx, dy):
+    def clicked(self, dx, dy, ext):
         i = self.vecfield.valueAt(Vector2D(dx, dy))
-        self.vecfield[i[0]].flip()
+        self.vecfield[i[0]].alive = ext
 

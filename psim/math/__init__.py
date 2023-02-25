@@ -71,14 +71,26 @@ class Vector2D(Vector):
     def __add__(self, other):
         if isinstance(other, Vector2D):
             return Vector2D(self.x + other.x, self.y + other.y)
+        elif isinstance(other, tuple):
+            return Vector2D(self.x + other[0], self.y + other[1])
         else:
-            return Vector2D(self.x + other, self.y + other)
-    
+            raise TypeError(f"Cannot add Vector2D and {type(other).__name__}")
+
     def __radd__(self, other):
         if isinstance(other, Vector2D):
             return Vector2D(self.x + other.x, self.y + other.y)
+        elif isinstance(other, tuple):
+            return Vector2D(self.x + other[0], self.y + other[1])
         else:
-            return Vector2D(self.x + other, self.y + other)
+            raise TypeError(f"Cannot add Vector2D and {type(other).__name__}")
+        
+    def __sub__(self, other):
+        if isinstance(other, Vector2D):
+            return Vector2D(self.x - other.x, self.y - other.y)
+        elif isinstance(other, tuple):
+            return Vector2D(self.x - other[0], self.y - other[1])
+        else:
+            raise TypeError(f"Cannot add Vector2D and {type(other).__name__}")
 
     def __str__(self):
         if self.x == 0 and self.y == 0:
@@ -139,26 +151,36 @@ class VectorPairList(list):
                 return row
         return None
     
-class Vector2DRot(Vector):
+class Vector2DRot(Vector2D):
     def __init__(self, distance, angle):
-        super().__init__()
-        self.x = math.cos(angle) * distance
-        self.y = math.sin(angle) * distance
+        super().__init__(math.cos(angle) * distance, math.sin(angle) * distance)
         self.angle = angle
-    
-    def __len__(self):
-        return 2
-    
-    def __getitem__(self, key):
-        if key == 0:
-            return self.x
-        elif key == 1:
-            return self.y
-        else:
-            raise IndexError("Index out of Bounds")
+        self.dist = distance
 
-    def magnitude(self):
-        return math.sqrt((self.x**2) + (self.y**2))
+    def __add__(self, other):
+        if isinstance(other, Vector2DRot):
+            return Vector2DRot(math.sqrt((self.x + other.x)**2 + (self.y + other.y)**2), \
+                               math.atan2(self.y + other.y, self.x + other.x))
+        elif isinstance(other, tuple):
+            return Vector2DRot(self.dist + other[0], self.angle + other[1])
+        else:
+            raise TypeError(f"Cannot add Vector2DRot and {type(other).__name__}")
+
+    def __radd__(self, other):
+        if isinstance(other, Vector2DRot):
+            return Vector2DRot(self.dist + other.dist, self.angle + other.angle)
+        elif isinstance(other, tuple):
+            return Vector2DRot(self.dist + other[0], self.angle + other[1])
+        else:
+            raise TypeError(f"Cannot add Vector2DRot and {type(other).__name__}")
+        
+    def __sub__(self, other):
+        if isinstance(other, Vector2DRot):
+            return Vector2DRot(self.dist - other.dist, self.angle - other.angle)
+        elif isinstance(other, tuple):
+            return Vector2DRot(self.dist - other[0], self.angle - other[1])
+        else:
+            raise TypeError(f"Cannot add Vector2DRot and {type(other).__name__}")
 
 class Vector3D(Vector):
     def __init__(self, x, y, z):

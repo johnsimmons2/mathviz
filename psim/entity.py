@@ -5,6 +5,7 @@ import math
 class Entity:
     def __init__(self, x, y):
         self.__position = Vector2D(x, y)
+        self.debugmode = False
     
     @abstractmethod
     def display(self):

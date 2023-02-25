@@ -5,6 +5,7 @@ import psim as ps
 from pygame import QUIT
 from psim import simulation, fieldsimulation
 from psim.viewframe import ViewFrame
+from psim.inputhandler import handleInput
 
 HEIGHT = 1080
 WIDTH = 1920
@@ -21,7 +22,7 @@ def start():
     pg.display.set_caption("MathViz")
 
     sim = ps.Simulation()
-    fieldsim = ps.FieldSimulation(120)
+    fieldsim = ps.FieldSimulation(40)
     vf2.attach(fieldsim)
     vf2.setFPS(5)
     vf1.attach(sim)
@@ -38,22 +39,7 @@ def start():
         stats = VIEW.update()
         displayStats(state, stats)
         for event in pg.event.get():
-            if event.type == QUIT:
-                pg.quit()
-                sys.exit()
-            if event.type == pg.KEYDOWN:
-                fieldsim.pause()
-            if event.type == pg.MOUSEBUTTONDOWN:
-                mx, my = pg.mouse.get_pos()
-                if state:
-                    if event.button == pg.BUTTON_LEFT:
-                        sim.clicked(mx, my, True)
-                    elif event.button == pg.BUTTON_RIGHT:
-                        sim.clicked(mx, my, False)
-                else:
-                    fieldsim.clicked(mx, my)
-                if event.button == pg.BUTTON_MIDDLE:
-                    state = not state
+            state = handleInput(event, VIEW, state)
 
         pg.display.update()
 
@@ -64,7 +50,6 @@ def displayStats(state, stats):
         SCREEN.blit(text, (5, ps.getDims()[1]-25))
     text = VIEW.font.render(f'{"{:.2f}".format(VIEW.FPSClock.get_fps())} FPS', True, (0, 0, 0))
     SCREEN.blit(text, (5, ps.getDims()[1]-50))
-
 
 def getScreen():
     global SCREEN

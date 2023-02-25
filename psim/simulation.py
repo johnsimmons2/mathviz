@@ -10,14 +10,13 @@ import math
 class Simulation(Entity):
     def __init__(self):
         super().__init__(0, 0)
-        self.particles = [ps.Particle(x=np.random.randint(0, ps.app.WIDTH/2), \
-                                    y=np.random.randint(0, ps.app.HEIGHT/2), type=EParticleType.BLUE)\
+        self.particles = [ps.Particle(x=np.random.randint(0, ps.app.WIDTH), \
+                                    y=np.random.randint(0, ps.app.HEIGHT), type=EParticleType.BLUE)\
                                     for _ in range(40)]
 
     def clicked(self, x, y, rand):
         typ = EParticleType.BLUE
         startVel = np.random.rand()
-        print(startVel)
         if not rand:
             typ = EParticleType.RED
             startVel = 0

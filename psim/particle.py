@@ -39,7 +39,9 @@ class Particle(Entity):
         self.active = True
         self.flagged = True
         self.setColors()
-
+        self.gravityvec = Vector2DRot(0, 0)
+        if type == EParticleType.RED:
+            self.mass = 500
         if vel != None:
             self.angle = vel.angle
             self.velocity = vel.magnitude()
@@ -82,55 +84,48 @@ class Particle(Entity):
     def display(self):
         global DEBUG
         if DEBUG:
-            leng = math.hypot(self.velocity * math.sin(self.angle), self.velocity * math.cos(self.angle))
-            if leng > 1:
-                pg.draw.aaline(self.screen, (255,0,0), (self.x, self.y), (20*self.velocity * math.sin(self.angle)+self.x, 20*self.velocity * math.cos(self.angle)+self.y))
-            else:
-                pg.draw.aaline(self.screen, (128, 128, 128), (self.x, self.y), (20*self.velocity * math.sin(self.angle)+self.x, 20*self.velocity * math.cos(self.angle)+self.y))
-        pg.draw.circle(self.screen, (self.r, self.g, self.b), (self.x, self.y), self.size, self.thickness)
+            dx = ((math.sin(self.angle) * self.velocity) * 40) + self.position.x
+            dy = ((math.cos(self.angle) * self.velocity) * 40) + self.position.y
+            pg.draw.aaline(self.screen, (255,0,0), self.position, (dx, dy))
+            gx = ((math.sin(self.gravityvec.angle) * (self.gravityvec.dist + 1)) * 100) + self.position.x
+            gy = ((math.cos(self.gravityvec.angle) * (self.gravityvec.dist + 1)) * 100) + self.position.y
+            pg.draw.aaline(self.screen, (0,255,0), self.position, (gx, gy))
+        pg.draw.circle(self.screen, (self.r, self.g, self.b), self.position, self.size, self.thickness)
 
     def move(self):
         if abs(self.x) > 5000 or abs(self.y) > 5000:
             self.active = False
         if self.active:
+            gx = math.sin(self.gravityvec.angle) * self.gravityvec.dist
+            gy = math.cos(self.gravityvec.angle) * self.gravityvec.dist
+            self.angle += (self.gravityvec.angle * self.gravityvec.dist)/(self.velocity + 1)
             dx = math.sin(self.angle) * self.velocity
             dy = math.cos(self.angle) * self.velocity
-            dist = math.hypot(dx, dy)
-            exE = ps.SPEED_LIMIT - dist
-            
-            self.x += dx
-            self.y -= dy
-
-            # If you go over the speed limit
-            if exE < 0:
-                d2x = exE * math.sin(self.angle)
-                d2y = exE * math.cos(self.angle)
-                self.x -= d2x
-                self.y -= d2y
-                self.velocity += exE
+            self.position = self.position + (dx + gx, dy + gy)
 
     def collide(self, p: Particle):
-        dx = self.x - p.x
-        dy = self.y - p.y
+        dx = (self.position - p.position).x
+        dy = (self.position - p.position).y
         
         dist = math.hypot(dx, dy)
         if self.active == False or p.active == False:
             return None
         if dist < self.size + p.size:
             angle = math.atan2(dy, dx) + 0.5 * math.pi
-            total_mass = self.mass + p.mass
 
-            vec1 = addVectors((self.angle, self.velocity*(self.mass-p.mass)/total_mass), (angle, 2*p.velocity*p.mass/total_mass))
-            vec2 = addVectors((p.angle, p.velocity*(p.mass-self.mass)/total_mass), (angle+math.pi, 2*self.velocity*self.mass/total_mass))
+            self.angle = angle
+            p.angle = angle - math.pi/2
 
-            self.accelerate(vec1)
-            p.accelerate(vec2)
+            vel1 = p.velocity
+            vel2 = self.velocity
 
-            overlap = 0.5*(self.size + p.size - dist+1)
-            self.x += math.sin(angle)*overlap
-            self.y -= math.cos(angle)*overlap
-            p.x -= math.sin(angle)*overlap
-            p.y += math.cos(angle)*overlap
+            self.velocity = vel1
+            p.velocity = vel2
+
+            overlap = 0.5*(self.size + p.size)
+
+            self.position = self.position + (math.sin(angle)*overlap, math.cos(angle)*overlap)
+            p.position = p.position + (math.sin(angle - math.pi/2)*overlap, math.cos(angle - math.pi/2)*overlap)
     
     def photocollision(self, p: Particle):
         dx = self.x - p.x
@@ -139,42 +134,20 @@ class Particle(Entity):
         dist = math.hypot(dx, dy)
         if dist < self.size + p.size:
             self.active = False
-            (p.angle, p.velocity) = addVectors((self.angle, self.velocity), (p.angle, p.velocity))
             p.velocity = p.velocity / 2
 
-    def accelerate(self, vec):
-        velE = ps.SPEED_LIMIT - vec[1]
-        spd = ps.SPEED_LIMIT-ps.GRAV_CONST
-        if velE < 0:
-            (self.angle, self.velocity) = (vec[0], spd)
-            return None
-        (self.angle, self.velocity) = vec
-
     def gravity(self, other: Particle):
-        dx = self.x - other.x
-        dy = self.y - other.y
-        dist  = math.hypot(dx, dy)
+        dx = self.position.x - other.position.x
+        dy = self.position.y - other.position.y
+        dist = math.hypot(dx, dy)
         
         if dist < self.size + other.size:
             return None
-            
+        
         theta = math.atan2(dy, dx)
-        force =  ps.GRAV_CONST*other.mass*self.mass/(dist ** 2)
-        vec1 = addVectors((self.angle, self.velocity), (theta - 0.5 * math.pi, force/self.mass))
-        vec2 = addVectors((other.angle, other.velocity), (theta + 0.5 * math.pi, force/other.mass))
-        # if self.velocity > 1:
-            # print(f'{other.mass}*{self.mass}/{dist**2}=[{force}]\t{dx},{dy}|{dist}|{self.velocity}')
-        return (self.accelerate(vec1), other.accelerate(vec2))
+        force = 0.25 * other.mass*self.mass/(dist ** 2)
+        self.gravityvec = Vector2DRot(force/self.mass, math.pi + theta)
+        other.gravityvec = Vector2DRot(force/other.mass, math.pi - theta)
 
 
 # Adds 2 vectors, vector elements are angle, speed.
-def addVectors(vec1, vec2):
-    x  = math.sin(vec1[0]) * vec1[1] + math.sin(vec2[0]) * vec2[1]
-    y  = math.cos(vec1[0]) * vec1[1] + math.cos(vec2[0]) * vec2[1]
-
-    angle  = 0.5 * math.pi - math.atan2(y, x)
-    length = math.hypot(x, y)
-    # if length > 1:
-    #     length = 1
-
-    return (angle, length)
