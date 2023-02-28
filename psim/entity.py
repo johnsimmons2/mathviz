@@ -3,7 +3,7 @@ from psim.math import Vector2D
 import math
 
 class Entity:
-    def __init__(self, x, y):
+    def __init__(self, x = 0, y = 0):
         self.__position = Vector2D(x, y)
         self.debugmode = False
     

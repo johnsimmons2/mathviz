@@ -21,10 +21,11 @@ class Particle(Entity):
         if pos == None:
             if x != None and y != None:
                 self.position = Vector2D(x, y)
-                super().__init__(x, y)
+            else:
+                self.position = Vector2D(np.random.rand() * 1920, np.random.rand() * 1080)
         else:
-            super().__init__(pos.x, pos.y)
             self.position = pos
+        super().__init__(self.position.x, self.position.y)
         self.type = type
         self.x = self.position.x
         self.y = self.position.y

@@ -3,9 +3,9 @@ import pygame as pg
 import numpy as np
 import psim as ps
 from pygame import QUIT
-from psim import simulation, fieldsimulation
+from psim.simulation import ParticleSimulation, FieldSimulation
 from psim.viewframe import ViewFrame
-from psim.inputhandler import handleInput
+from psim.inputhandler import InputEvent, handleInput
 
 HEIGHT = 1080
 WIDTH = 1920
@@ -13,42 +13,72 @@ FPS = 120
 VIEW = ViewFrame()
 SCREEN = VIEW.display
 
-def start():
-    global SCREEN
-    pg.init()
-
-    vf1 = ViewFrame()
-    vf2 = ViewFrame()
-    pg.display.set_caption("MathViz")
-
-    sim = ps.Simulation()
-    fieldsim = ps.FieldSimulation(40)
-    vf2.attach(fieldsim)
-    vf2.setFPS(5)
-    vf1.attach(sim)
-    state = True
-    views = [vf1, vf2]
+class App:
+    def __init__(self):
+        pg.init()
+        self.state = 0
+        self.views: ViewFrame = []
     
-    while True:
-        if state:
-            VIEW = views[0]
-        else:
-            VIEW = views[1]
-        SCREEN = VIEW.display
-        SCREEN.fill((255,255,255))
-        stats = VIEW.update()
-        displayStats(state, stats)
-        for event in pg.event.get():
-            state = handleInput(event, VIEW, state)
-
+    def update(self):
+        self.views[self.state].update()
         pg.display.update()
 
-def displayStats(state, stats):
+    def addView(self, view):
+        self.views.append(view)
+    
+    def get(self, indx = None):
+        if indx == None:
+            return self.views[self.state]
+        if indx >= 0 and indx < len(self.views):
+            return self.views[indx]
+    
+    def set_caption(self, cap):
+        pg.display.set_caption(cap)
+
+    def set(self, state):
+        if self.get(state):
+            self.state = state
+            return
+    
+    def blank(self):
+        self.views[self.state].display.fill((255, 255, 255))
+
+
+def start():
+    global SCREEN
+    app = App()
+    app.set_caption('Particle Simulator')
+
+    sim = ParticleSimulation(50)
+    fieldsim = FieldSimulation(10)
+    app.addView(sim)
+    app.addView(fieldsim)
+    
+    while True:
+        stats = app.update()
+        app.blank()
+        displayStats(app, stats)
+        for event in pg.event.get():
+            ev=handleInput(event)
+            if ev == InputEvent.KEY_RIGHT:
+                curState = app.state
+                if curState + 1 < len(app.views):
+                    app.set(curState + 1)
+            elif ev == InputEvent.KEY_LEFT:
+                curState = app.state
+                if curState - 1 >= 0:
+                    app.set(curState - 1)
+            else:
+                if ev:
+                    app.get().pushEvent(ev)
+
+
+def displayStats(app, stats):
+    txt = f'[View: {app.get().label}]'
     if stats != None:
         stats = stats[0]
-        text = VIEW.font.render(f'[View: ({1 if state else 2})] {len(VIEW.entities)} Vm={"{:.2f}".format(stats[0])} VM={"{:.2f}".format(stats[1])} Va={"{:.2f}".format(stats[2])} AvgP=({"{:.2f}".format(stats[3])}, {"{:.2f}".format(stats[4])})', True, (0,0,0))
-        SCREEN.blit(text, (5, ps.getDims()[1]-25))
-    text = VIEW.font.render(f'{"{:.2f}".format(VIEW.FPSClock.get_fps())} FPS', True, (0, 0, 0))
+        txt = txt + f'{stats}'
+    text = VIEW.font.render(txt, True, (0, 0, 0))
     SCREEN.blit(text, (5, ps.getDims()[1]-50))
 
 def getScreen():

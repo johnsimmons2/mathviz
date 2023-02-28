@@ -1,5 +1,7 @@
+from abc import abstractmethod
 import pygame as pg
 from psim.entity import Entity
+from psim.inputhandler import InputEvent
 
 
 class ViewFrame:
@@ -21,14 +23,13 @@ class ViewFrame:
         self.fps = fps
         self._pausedfps = 60
         self._cachefps = self.fps
+        self._events = []
+
+    def pushEvent(self, event: InputEvent):
+        self._events.append(event)
 
     def setEntities(self, ents):
         self.entities = ents
-    
-    def attach(self, to):
-        self.entities = [to]
-        self.simulation = True
-        self.label = type(to).__name__
 
     def setFPS(self, fps):
         self.fps = fps
@@ -41,27 +42,33 @@ class ViewFrame:
         self._cachefps += fps
 
     def pause(self):
-        if self.simulation:
-            self.paused = not self.paused
-            for e in self.entities:
-                e.debugmode = not e.debugmode
-            if self.paused:
-                self.fps = self._pausedfps
-            else:
-                self.fps = self._cachefps
-            print(self._cachefps)
+        self.paused = not self.paused
+        for e in self.entities:
+            e.debugmode = not e.debugmode
+        if self.paused:
+            self.fps = self._pausedfps
+        else:
+            self.fps = self._cachefps
 
     def update(self):
         stats = []
-        for entity in self.entities:
-            if not self.paused:
-                stat = entity.update()
-                if stat != None:
-                    stats.append(stat)
-            entity.display()
+        self._handleInputEvents()
+        if not self.paused:
+            stat = self._inner_update()
+            if stat != None:
+                stats.append(stat)
+        for e in self.entities:
+            e.display()
         self.FPSClock.tick(self.fps)
         return stats if len(stats) > 0 else None
+    
+    def _draw_circle(self, color, position, size):
+        pg.draw.circle(self.display, color, position, size, size)
 
-    def click(self, position, ext):
-        if self.simulation:
-            self.entities[0].clicked(position[0], position[1], ext)
+    @abstractmethod
+    def _handleInputEvents(self):
+        pass
+    
+    @abstractmethod
+    def _inner_update(self):
+        pass

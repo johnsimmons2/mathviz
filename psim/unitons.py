@@ -1,4 +1,3 @@
-
 from operator import attrgetter
 import math
 import numpy as np
@@ -87,6 +86,39 @@ class Uniton:
         else:
             return ''
     
+    def __add__(self, other):
+        if self._checkInstance(other):
+            return Uniton(self.value + other.value)
+        else:
+            raise TypeError(f"Cannot add Uniton and {type(other).__name__}")
+    
+    def __radd__(self, other):
+        if self._checkInstance(other):
+            return Uniton(self.value + other.value)
+        else:
+            raise TypeError(f"Cannot add Uniton and {type(other).__name__}")
+    
+    def __sub__(self, other):
+        if self._checkInstance(other):
+            return Uniton(self.value - other.value)
+        else:
+            raise TypeError(f"Cannot add Uniton and {type(other).__name__}")
+        
+    def __mul__(self, other):
+        if self._checkInstance(other):
+            return Uniton(self.value * other.value)
+        else:
+            raise TypeError(f"Cannot add Uniton and {type(other).__name__}")
+        
+    def __div__(self, other):
+        if self._checkInstance(other):
+            return Uniton(self.value / other.value)
+        else:
+            raise TypeError(f"Cannot add Uniton and {type(other).__name__}")
+
+    def _checkInstance(self, obj):
+        return isinstance(obj, Uniton)
+
     def getHeterogenity(self):
         for c in self.children:
             for k in self.children:
