@@ -21,7 +21,7 @@ class ViewFrame:
         self.label = "entitylist"
         self.paused = False
         self.fps = fps
-        self._pausedfps = 60
+        self._pausedfps = 144
         self._cachefps = self.fps
         self._events = []
 

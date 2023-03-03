@@ -1,5 +1,5 @@
 from psim.entity import Entity
-from psim.inputhandler import InputEvent, CLICK_DOWN
+from psim.inputhandler import InputEvent, isClickDown
 from psim.math import Vector2D, Field, VectorPairList
 import psim as ps
 import math
@@ -29,7 +29,7 @@ class Fieldling(Entity):
         dx = (pt[0]*wth)
         dy = (pt[1]*wth)
         pg.draw.rect(ps.getScreen(), tuple(color), pg.rect.Rect(dx, dy, wth, wth))
-        if self.debugmode:
+        if self.debugmode and False:
             txt = ps.getView().font.render(f'{pt}', True, (255,0,0))
             ofsx = (wth/2) - txt.get_rect().width/2
             ofsy = (wth/2) - txt.get_rect().height/2
@@ -90,7 +90,6 @@ class FieldSimulation(Simulation):
         self.label = "Field Simulation"
     
     def _handleInputEvents(self):
-        global CLICK_DOWN
         for e in self._events:
             match(e):
                 case InputEvent.KEY_SPACE:
@@ -105,7 +104,7 @@ class FieldSimulation(Simulation):
                     self.clicked(mx, my, False)
                     continue
                 case InputEvent.MOUSE_MOVE:
-                    if CLICK_DOWN:
+                    if isClickDown():
                         mx, my = pg.mouse.get_pos()
                         self.clicked(mx, my, True)
                         continue

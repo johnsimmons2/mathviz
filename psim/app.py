@@ -31,17 +31,31 @@ class App:
             return self.views[self.state]
         if indx >= 0 and indx < len(self.views):
             return self.views[indx]
+        elif abs(indx) < len(self.views):
+            return self.views[indx]
+        else: print(indx)
     
     def set_caption(self, cap):
         pg.display.set_caption(cap)
 
     def set(self, state):
+        mdl = state % len(self.views)
         if self.get(state):
             self.state = state
-            return
-    
+        elif self.get(mdl):
+            self.state = mdl
+
     def blank(self):
         self.views[self.state].display.fill((255, 255, 255))
+
+def handleEvents(events: list, app: App):
+    for event in events:
+        ev = handleInput(event)
+        if ev == InputEvent.KEY_RIGHT:
+            app.set(app.state + 1)
+        elif ev == InputEvent.KEY_LEFT:
+            app.set(app.state - 1)
+        app.get().pushEvent(ev)
 
 
 def start():
@@ -58,19 +72,7 @@ def start():
         stats = app.update()
         app.blank()
         displayStats(app, stats)
-        for event in pg.event.get():
-            ev=handleInput(event)
-            if ev == InputEvent.KEY_RIGHT:
-                curState = app.state
-                if curState + 1 < len(app.views):
-                    app.set(curState + 1)
-            elif ev == InputEvent.KEY_LEFT:
-                curState = app.state
-                if curState - 1 >= 0:
-                    app.set(curState - 1)
-            else:
-                if ev:
-                    app.get().pushEvent(ev)
+        handleEvents(pg.event.get(), app)
 
 
 def displayStats(app, stats):

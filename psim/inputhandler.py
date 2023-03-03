@@ -22,6 +22,10 @@ class InputEvent(Enum):
 CLICK_DOWN = False
 pts = []
 
+def isClickDown():
+    global CLICK_DOWN
+    return CLICK_DOWN
+
 def handleInput(event):
     global CLICK_DOWN
     global pts
