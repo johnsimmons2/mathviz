@@ -38,9 +38,9 @@ def handleInput(event):
     if event.type == pg.KEYDOWN:
         if event.key == pg.K_SPACE:
             eventType = InputEvent.KEY_SPACE
-        elif event.key == pg.KEYUP:
+        elif event.key == pg.K_UP:
             eventType = InputEvent.KEY_UP
-        elif event.key == pg.KEYDOWN:
+        elif event.key == pg.K_DOWN:
             eventType = InputEvent.KEY_DOWN
         elif event.key == pg.K_ESCAPE:
             eventType = InputEvent.KEY_ESC

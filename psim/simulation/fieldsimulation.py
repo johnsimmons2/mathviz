@@ -19,21 +19,25 @@ class Fieldling(Entity):
         self.updates = 0
         self.aliveneighbors = 0
     
+    def clicked(self, ext: bool):
+        self.alive = ext
+    
     def display(self):
         color = [0, 0, 0]
         wth = self.resolution
-        color[1] = min((255 / 9) * self.aliveneighbors, 255)
-        color[2] = 128 if self.alive else 0
-        color[0] = 0 # min(point.velocity.magnitude(), 255)
+        color[1] = -1 * max(self.aliveneighbors*(255//9), 0) + 255
+        color[2] = 0 if self.alive else 255
+        color[0] = 0 if self.alive else 255 # min(point.velocity.magnitude(), 255)
         pt = self.position
         dx = (pt[0]*wth)
         dy = (pt[1]*wth)
         pg.draw.rect(ps.getScreen(), tuple(color), pg.rect.Rect(dx, dy, wth, wth))
-        if self.debugmode and False:
+        if self.debugmode:
             txt = ps.getView().font.render(f'{pt}', True, (255,0,0))
             ofsx = (wth/2) - txt.get_rect().width/2
             ofsy = (wth/2) - txt.get_rect().height/2
-            ps.getScreen().blit(txt, (dx+ofsx, dy+ofsy))
+            txtPos = (dx+ofsx, dy+ofsy)
+            ps.getScreen().blit(txt, txtPos)
     
     def flip(self):
         self.alive = not self.alive
@@ -82,6 +86,8 @@ class ParticleField(Field):
 class FieldSimulation(Simulation):
     def __init__(self, resolution=5):
         super().__init__()
+        self.setUpdateRate(1/4)
+        self.setFPS(8)
         self.resolution = resolution
         self.vecfield = ParticleField(resolution)
         self.entities = self.vecfield._field
@@ -90,11 +96,9 @@ class FieldSimulation(Simulation):
         self.label = "Field Simulation"
     
     def _handleInputEvents(self):
+        super()._cursorEventCheck()
         for e in self._events:
             match(e):
-                case InputEvent.KEY_SPACE:
-                    self.pause()
-                    continue
                 case InputEvent.MOUSE_CLICK_LEFT:
                     mx, my = pg.mouse.get_pos()
                     self.clicked(mx, my, True)
@@ -110,47 +114,18 @@ class FieldSimulation(Simulation):
                         continue
         self._events = []
 
+    def _inner_display(self):
+        self.label = f"Field Simulation: Cursor [{self.cursorSize}/{self.cursorMaxSize}]"
+
     # !Overriding Entity! #
     def _inner_update(self):
         for i, point in self.vecfield.get():
             if isinstance(point, Fieldling):
-                point.aliveneighbors = point.getAliveNeighbors(i, self.vecfield)
-        for i, point in self.vecfield.get():
-            if isinstance(point, Fieldling):
-                point = self.tryRule(point, point.aliveneighbors)
+                point = self.tryRule(i, point)
         self.entities = self.vecfield._field
         self.updates += 1
     
-    def tryRule(self, point, numAlive):
-        return Fieldling.tryRule(point, numAlive, self.updates)
+    def tryRule(self, i, point):
+        return Fieldling.tryRule(point, point.getAliveNeighbors(i, self.vecfield), self.updates)
             
-    def clicked(self, dx, dy, ext):
-        v = self.resolution
-        i = self.vecfield.valueAt(Vector2D(dx, dy))
-        self.vecfield[i[0]].alive = ext
-
-        i = self.vecfield.valueAt(Vector2D(dx+v, dy+v))
-        self.vecfield[i[0]].alive = ext
-
-        i = self.vecfield.valueAt(Vector2D(dx+v, dy))
-        self.vecfield[i[0]].alive = ext
-
-        i = self.vecfield.valueAt(Vector2D(dx, dy+v))
-        self.vecfield[i[0]].alive = ext
-
-        i = self.vecfield.valueAt(Vector2D(dx-v, dy-v))
-        self.vecfield[i[0]].alive = ext
-
-        i = self.vecfield.valueAt(Vector2D(dx, dy-v))
-        self.vecfield[i[0]].alive = ext
-
-        i = self.vecfield.valueAt(Vector2D(dx-v, dy))
-        self.vecfield[i[0]].alive = ext
-
-        i = self.vecfield.valueAt(Vector2D(dx-v, dy+v))
-        self.vecfield[i[0]].alive = ext
-
-        i = self.vecfield.valueAt(Vector2D(dx+v, dy-v))
-        self.vecfield[i[0]].alive = ext
-
 

@@ -15,6 +15,10 @@ class Entity:
     def update(self):
         pass
 
+    @abstractmethod
+    def clicked(self, ext: bool):
+        pass
+
     def updatePosition(self, pos: Vector2D):
         self.__position = pos
 

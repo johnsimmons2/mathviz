@@ -218,24 +218,44 @@ class Field:
     def __getitem__(self, key):
         return self._field[key]
 
-    def _get_local_position(self, vec: Vector):
-        index = vec[0]+(vec[1]*self._adj_dims[0])
+    def _get_index_of_vector(self, vec: Vector):
+        index = vec[0] + (vec[1] * (self._adj_dims[0]))
         return index
     
     def _translate_to_local(self, vec: Vector):
         return Vector2D(math.floor(vec[0]/self.resolution), math.floor(vec[1]/self.resolution))
 
+    def swap(self, indx1, indx2):
+        c1 = self.get(indx1)
+        c2 = self.get(indx2)
+        if c1 and c2:
+            self._field[indx1] = c2
+            self._field[indx2] = c1
+
+    def set(self, index, obj):
+        if self.get(index):
+            self._field[index] = obj
+    
     def insert(self, position: Vector, object):
         posSize = len(position)
         fieldSize = len(self.dims)
         if posSize != fieldSize:
             return
-        loc = self._get_local_position(position)
+        loc = self._get_index_of_vector(position)
         self._field[loc] = object
         self._poi.append(loc)
     
-    def get(self):
-        return enumerate(self._field)
+    def get(self, indx = None, vec = None):
+        if vec != None:
+            res = self._get_index_of_vector(vec)
+            if res < len(self._field):
+                return res, self._field[res]
+            else:
+                return (None, None)
+        if indx == None:
+            return enumerate(self._field)
+        if indx >= 0 and indx < len(self._field):
+            return indx,self._field[indx]
 
     def getNeighborIndices(self, index):
         toCheck = []
@@ -268,13 +288,15 @@ class Field:
         return toCheck
 
     # Attempts to get value of vector 
-    def valueAt(self, vec: Vector):
+    def valueAt(self, vec: Vector, translate = True):
         if vec[0] <= self.dims[0] and vec[1] <= self.dims[1]:
-            index = self._get_local_position(self._translate_to_local(vec))
+            if translate:
+                vec = self._translate_to_local(vec)
+            index = self._get_index_of_vector(vec)
             if index < len(self._field):
                 val = self._field[index]
                 return (index, val)
-        return None
+        return None, None
 
     def getCoordsAt(self, index):
         return (index % self._adj_dims[0], (index // self._adj_dims[0]))

@@ -3,7 +3,7 @@ import pygame as pg
 import numpy as np
 import psim as ps
 from pygame import QUIT
-from psim.simulation import ParticleSimulation, FieldSimulation
+from psim.simulation import ParticleSimulation, FieldSimulation, SandSimulation
 from psim.viewframe import ViewFrame
 from psim.inputhandler import InputEvent, handleInput
 
@@ -20,7 +20,14 @@ class App:
         self.views: ViewFrame = []
     
     def update(self):
-        self.views[self.state].update()
+        self.views[self.state].active = True
+        stats = self.views[self.state].update()
+        txt = f'[View: {self.get().label}]'
+        if stats != None:
+            stats = stats[0]
+            txt = txt + f'{stats}'
+        text = VIEW.font.render(txt, True, (0, 0, 0))
+        SCREEN.blit(text, (5, ps.getDims()[1]-50))
         pg.display.update()
 
     def addView(self, view):
@@ -33,7 +40,6 @@ class App:
             return self.views[indx]
         elif abs(indx) < len(self.views):
             return self.views[indx]
-        else: print(indx)
     
     def set_caption(self, cap):
         pg.display.set_caption(cap)
@@ -41,9 +47,13 @@ class App:
     def set(self, state):
         mdl = state % len(self.views)
         if self.get(state):
+            self.get().activate(False)
+            print(self.get().active, self.get().label)
             self.state = state
         elif self.get(mdl):
+            self.get().activate(False)
             self.state = mdl
+        self.get().activate(True)
 
     def blank(self):
         self.views[self.state].display.fill((255, 255, 255))
@@ -57,31 +67,24 @@ def handleEvents(events: list, app: App):
             app.set(app.state - 1)
         app.get().pushEvent(ev)
 
-
 def start():
     global SCREEN
     app = App()
     app.set_caption('Particle Simulator')
 
     sim = ParticleSimulation(50)
-    fieldsim = FieldSimulation(10)
+    fieldsim = FieldSimulation(50)
+    sandsim = SandSimulation(15)
     app.addView(sim)
     app.addView(fieldsim)
-    
+    app.addView(sandsim)
+
     while True:
-        stats = app.update()
-        app.blank()
-        displayStats(app, stats)
+        app.update()
         handleEvents(pg.event.get(), app)
-
-
-def displayStats(app, stats):
-    txt = f'[View: {app.get().label}]'
-    if stats != None:
-        stats = stats[0]
-        txt = txt + f'{stats}'
-    text = VIEW.font.render(txt, True, (0, 0, 0))
-    SCREEN.blit(text, (5, ps.getDims()[1]-50))
+        app.blank()
+        SCREEN = app.get().display
+        VIEW = app.get()
 
 def getScreen():
     global SCREEN

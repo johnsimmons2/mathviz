@@ -1,7 +1,8 @@
 from psim.inputhandler import InputEvent
+from psim.math import Vector2D
 from psim.particle import EParticleType, Particle
 from psim.simulation.simulation import Simulation
-
+import pygame as pg
 
 class ParticleSimulation(Simulation):
     def __init__(self, numParticles):
@@ -10,12 +11,21 @@ class ParticleSimulation(Simulation):
         self.label = "Particle Simulation"
     
     def _handleInputEvents(self):
+        super()._cursorEventCheck()
         for e in self._events:
             match(e):
-                case InputEvent.KEY_SPACE:
-                    self.pause()
+                case InputEvent.MOUSE_CLICK_LEFT:
+                    mx, my = pg.mouse.get_pos()
+                    self.clicked(mx, my, True)
+                    continue
+                case InputEvent.MOUSE_CLICK_RIGHT:
+                    mx, my = pg.mouse.get_pos()
+                    self.clicked(mx, my, False)
                     continue
         self._events = []
+
+    def click_at(self, dx, dy, ext):
+        self.entities.append(Particle(pos=Vector2D(dx, dy), type = EParticleType.BLUE if ext else EParticleType.RED))
 
     # !Override ViewFrame! #
     def _inner_update(self):
