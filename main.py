@@ -8,6 +8,9 @@
 
 
 import psim
+from psim.simulation.fieldsimulation import FieldSimulation
+from psim.simulation.particlesimulator import ParticleSimulation
+from psim.simulation.sandsimulation import SandSimulation
 
 # from unitons import Uniton, PRIMES, AMOUNT
 
@@ -22,6 +25,9 @@ import psim
 # UNITONS = getUnitons()
 
 def main():
+    psim.addSimulation(ParticleSimulation(50))
+    psim.addSimulation(FieldSimulation(50))
+    psim.addSimulation(SandSimulation(15))
     psim.start()
 
 

@@ -3,21 +3,14 @@ import pygame as pg
 import numpy as np
 import psim as ps
 from pygame import QUIT
-from psim.simulation import ParticleSimulation, FieldSimulation, SandSimulation
-from psim.viewframe import ViewFrame
 from psim.inputhandler import InputEvent, handleInput
-
-HEIGHT = 1080
-WIDTH = 1920
-FPS = 120
-VIEW = ViewFrame()
-SCREEN = VIEW.display
+from psim.const import VIEW, WIDTH, HEIGHT, SCREEN
 
 class App:
     def __init__(self):
         pg.init()
         self.state = 0
-        self.views: ViewFrame = []
+        self.views = []
     
     def update(self):
         self.views[self.state].active = True
@@ -55,6 +48,10 @@ class App:
             self.state = mdl
         self.get().activate(True)
 
+    def valid(self):
+        if len(self.views) > 0:
+            return True
+
     def blank(self):
         self.views[self.state].display.fill((255, 255, 255))
 
@@ -67,24 +64,24 @@ def handleEvents(events: list, app: App):
             app.set(app.state - 1)
         app.get().pushEvent(ev)
 
+APP = App()
+
+def addSimulation(sim):
+    global APP, VIEW
+    APP.addView(sim)
+    VIEW = APP.get()
+
 def start():
-    global SCREEN
-    app = App()
-    app.set_caption('Particle Simulator')
+    global SCREEN, APP, VIEW
+    APP.set_caption('Particle Simulator')
 
-    sim = ParticleSimulation(50)
-    fieldsim = FieldSimulation(50)
-    sandsim = SandSimulation(15)
-    app.addView(sim)
-    app.addView(fieldsim)
-    app.addView(sandsim)
-
-    while True:
-        app.update()
-        handleEvents(pg.event.get(), app)
-        app.blank()
-        SCREEN = app.get().display
-        VIEW = app.get()
+    if APP.valid():
+        while True:
+            APP.update()
+            handleEvents(pg.event.get(), APP)
+            APP.blank()
+            SCREEN = APP.get().display
+            VIEW = APP.get()
 
 def getScreen():
     global SCREEN
