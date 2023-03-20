@@ -1,5 +1,4 @@
 from __future__ import annotations
-from psim.entity import Entity
 from psim.math import Vector2D, Vector2DRot
 from enum import Enum
 import math
@@ -16,7 +15,7 @@ class EParticleType(Enum):
     GREEN = 3,
     PURPLE = 4
 
-class Particle(Entity):
+class Particle:
     def __init__(self, pos: Vector2D = None, vel: Vector2DRot = None, type: EParticleType = EParticleType.NONE, x = None, y = None):
         if pos == None:
             if x != None and y != None:
@@ -25,12 +24,12 @@ class Particle(Entity):
                 self.position = Vector2D(np.random.rand() * 1920, np.random.rand() * 1080)
         else:
             self.position = pos
-        super().__init__(self.position.x, self.position.y)
         self.type = type
         self.x = self.position.x
         self.y = self.position.y
         self.screen = ps.getScreen()
         self.r, self.g, self.b = 0, 0, 0
+        self.debugmode = False
 
         self.dist = 0
         self.wavelength = 0

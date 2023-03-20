@@ -2,7 +2,6 @@ from abc import abstractmethod
 from psim.inputhandler import InputEvent
 from psim.particle import EParticleType
 from psim.math import Vector2D, Vector2DRot
-from psim.entity import Entity
 import psim as ps
 import numpy as np
 import pygame as pg

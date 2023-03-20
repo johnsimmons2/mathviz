@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from psim.entity import Entity
 from psim.inputhandler import InputEvent, isClickDown
 from psim.math import Field, Vector2D
 from psim.simulation.simulation import Simulation
@@ -11,25 +10,28 @@ import psim as ps
 
 class EBlockType(Enum):
     NONE = 0,
-    SAND = 1
+    SAND = 1,
+    WATER = 2
 
 WHITE = [255, 255, 255]
 ORANGE = [200, 90, 30]
-
+BLUE = [0, 60, 200]
 RULES = {
-        EBlockType.NONE: {'solid': False, 'mass': 0.0, 'color': WHITE},
-        EBlockType.SAND: {'solid': True, 'mass': 1.0, 'color': ORANGE}
-    }
+            EBlockType.NONE: {'solid': False, 'mass': 0.0, 'color': WHITE},
+            EBlockType.SAND: {'solid': True, 'mass': 1.0, 'color': ORANGE},
+            EBlockType.WATER: {'solid': True, 'mass': 1.0, 'color': BLUE}
+        }
 
-class Block(Entity):
+
+class Block:
     def __init__(self, pos, indx = 0, res = 0, type = EBlockType.NONE, ups = 0):
-        super().__init__(pos[0], pos[1])
         self.index = indx
         self.resolution = res
         self.position = pos
 
         self.mass = RULES[type]['mass']
         self.solid = RULES[type]['solid']
+        self.debugmode = False
         self.surfacetension = 0
         self.type = type
         self.updates = ups
@@ -92,7 +94,12 @@ class SandSimulation(Simulation):
         self.label = 'Sand Simulation'
         self.paused = False
         self.updates = 0
-        self.rules = [self.r_floor, self.r_updates, self.r_solid_fall]
+        self.baseRules = [self.r_floor, self.r_updates]
+        self.rules = {
+            EBlockType.NONE: {'solid': False, 'mass': 0.0, 'color': WHITE},
+            EBlockType.SAND: {'solid': True, 'mass': 1.0, 'color': ORANGE, 'rules': [self.r_solid_fall]},
+            EBlockType.WATER: {'solid': True, 'mass': 1.0, 'color': BLUE, 'rules': [self.r_solid_fall]}
+        }
     
     def _inner_display(self):
         self.label = f"Sand Simulation: Cursor [{self.cursorSize}/{self.cursorMaxSize}]"
@@ -102,9 +109,13 @@ class SandSimulation(Simulation):
         for i, n in self.vecfield.get():
             if isinstance(n, Block):
                 if n.type == EBlockType.SAND:
-                    for rule in self.rules:
+                    for rule in self.baseRules:
                         if not rule(n):
-                            continue
+                            break
+                    for rule in self.rules[n.type]['rules']:
+                        if not rule(n):
+                            break
+
                     
         self.entities = self.vecfield._field
 
@@ -114,8 +125,8 @@ class SandSimulation(Simulation):
     def swap(self, indx1, indx2):
         self._update(indx1)
         self._update(indx2)
+        self.vecfield.set(indx2, self.vecfield[indx2].setType(self.vecfield[indx1].type))
         self.vecfield.set(indx1, self.vecfield[indx1].setType(EBlockType.NONE))
-        self.vecfield.set(indx2, self.vecfield[indx2].setType(EBlockType.SAND))
 
     def _handleInputEvents(self):
         super()._cursorEventCheck()
@@ -123,7 +134,7 @@ class SandSimulation(Simulation):
             match(e):
                 case InputEvent.MOUSE_CLICK_LEFT:
                     mx, my = pg.mouse.get_pos()
-                    self.clicked(mx, my, EBlockType.SAND)
+                    self.clicked(mx, my, EBlockType.WATER)
                     continue
                 case InputEvent.MOUSE_CLICK_RIGHT:
                     mx, my = pg.mouse.get_pos()
@@ -148,6 +159,15 @@ class SandSimulation(Simulation):
         neigh = self._base_rule(block)
         for b in neigh:
             if b[1].position[1] > block.position[1]:
+                if block.solid and not b[1].solid:
+                    if block.updates != 1 and b[1].updates != 1:
+                        self.swap(block.index, b[1].index)
+                        return
+
+    def r_water(self, block: Block):
+        neigh = self._base_rule(block)
+        for b in neigh:
+            if b[1].position[0] == block.position[0]:
                 if block.solid and not b[1].solid:
                     if block.updates != 1 and b[1].updates != 1:
                         self.swap(block.index, b[1].index)

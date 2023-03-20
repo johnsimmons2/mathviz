@@ -1,4 +1,3 @@
-from psim.entity import Entity
 from psim.inputhandler import InputEvent, isClickDown
 from psim.math import Vector2D, Field, VectorPairList
 import psim as ps
@@ -8,9 +7,8 @@ import pygame as pg
 
 from psim.simulation.simulation import Simulation
 
-class Fieldling(Entity):
+class Fieldling:
     def __init__(self, index=0, pos=None, vel=None, res=0):
-        super().__init__(pos[0], pos[1])
         self.index = index
         self.position = pos
         self.velocity = vel
@@ -18,6 +16,7 @@ class Fieldling(Entity):
         self.alive = False
         self.updates = 0
         self.aliveneighbors = 0
+        self.debugmode = False
     
     def clicked(self, ext: bool):
         self.alive = ext

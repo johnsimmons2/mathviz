@@ -1,6 +1,5 @@
 from abc import abstractmethod
 import pygame as pg
-from psim.entity import Entity
 from psim.inputhandler import InputEvent
 
 
@@ -15,7 +14,7 @@ class ViewFrame:
             self.height = 1080
         self.FPSClock = pg.time.Clock()
         self.font = pg.font.Font('freesansbold.ttf', 16)
-        self.entities: list[Entity] = []
+        self.entities: list = []
         self.display = pg.display.set_mode((self.width, self.height))
         self.simulation = False
         self.label = "entitylist"
