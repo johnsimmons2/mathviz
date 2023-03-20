@@ -1,5 +1,6 @@
-from abc import abstractmethod
 import pygame as pg
+from psim.app import getDims
+from abc import abstractmethod
 from psim.inputhandler import InputEvent
 
 
@@ -10,8 +11,8 @@ class ViewFrame:
             self.width = width
             self.height = height
         else:
-            self.width = 1920
-            self.height = 1080
+            self.width = getDims()[0]
+            self.height = getDims()[1]
         self.FPSClock = pg.time.Clock()
         self.font = pg.font.Font('freesansbold.ttf', 16)
         self.entities: list = []
