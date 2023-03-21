@@ -1,6 +1,6 @@
 
 class SystemValues:
-    GRAV_CONST = 0.1
+    GRAV_CONST = 0.0001
     SPEED_LIMIT = 1
     STRUCTURE_CONST = float(1/(120 + GRAV_CONST))
     WIDTH = 1920

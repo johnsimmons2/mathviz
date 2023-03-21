@@ -16,7 +16,7 @@ class EParticleType(Enum):
     PURPLE = 4
 
 class Particle:
-    def __init__(self, pos: Vector2D = None, vel: Vector2DRot = None, type: EParticleType = EParticleType.NONE, x = None, y = None):
+    def __init__(self, pos: Vector2D = None, vel: Vector2D = None, type: EParticleType = EParticleType.NONE, x = None, y = None):
         if pos == None:
             if x != None and y != None:
                 self.position = Vector2D(x, y)
@@ -38,15 +38,13 @@ class Particle:
         self.active = True
         self.flagged = True
         
-        self.gravityvec = Vector2DRot(0, 0)
         if type == EParticleType.RED:
             self.mass = 500
         if vel != None:
-            self.angle = vel.angle
-            self.velocity = vel.magnitude()
+            self.velocity = vel
         else:
-            self.angle = np.random.random() * 2 * math.pi
-            self.velocity = np.random.rand()
+            self.velocity = Vector2D((np.random.rand()*2) - 1, (np.random.rand()*2) - 1)
+            self.velocity = Vector2D()
 
     def setColors(self):
         match(self.type):
@@ -65,21 +63,13 @@ class Particle:
         pass
 
     def display(self):
-        ps.renderer.drawVector2D(self.position, self.getDirection(), ps.sysvals.VIEW.debugmode, color=self.color)
-
-    def getDirection(self):
-        return Vector2D(self.velocity * math.sin(self.angle), self.velocity * math.cos(self.angle))
+        ps.renderer.drawVector2D(self.position, self.velocity, ps.sysvals.VIEW.debugmode, color=self.color)
 
     def move(self):
         if abs(self.x) > 5000 or abs(self.y) > 5000:
             self.active = False
         if self.active:
-            gx = math.sin(self.gravityvec.angle) * self.gravityvec.dist
-            gy = math.cos(self.gravityvec.angle) * self.gravityvec.dist
-            self.angle += (self.gravityvec.angle * self.gravityvec.dist)/(self.velocity + 1)
-            dx = math.sin(self.angle) * self.velocity
-            dy = math.cos(self.angle) * self.velocity
-            self.position = self.position + (dx + gx, dy + gy)
+            self.position = self.position + self.velocity
 
     def collide(self, p: Particle):
         dx = (self.position - p.position).x
@@ -91,14 +81,11 @@ class Particle:
         if dist < self.size + p.size:
             angle = math.atan2(dy, dx) + 0.5 * math.pi
 
-            self.angle = angle
-            p.angle = angle - math.pi/2
+            a1 = angle
+            a2 = angle - math.pi/2
 
-            vel1 = p.velocity
-            vel2 = self.velocity
-
-            self.velocity = vel1
-            p.velocity = vel2
+            self.velocity = Vector2D(math.sin(a1), math.cos(a1))
+            p.velocity = Vector2D(math.sin(a2), math.cos(a2))
 
             overlap = 0.5*(self.size + p.size)
 
@@ -115,8 +102,6 @@ class Particle:
         
         theta = math.atan2(dy, dx)
         force = 0.25 * other.mass*self.mass/(dist ** 2)
-        self.gravityvec = Vector2DRot(force/self.mass, math.pi + theta)
-        other.gravityvec = Vector2DRot(force/other.mass, math.pi - theta)
 
 
 # Adds 2 vectors, vector elements are angle, speed.

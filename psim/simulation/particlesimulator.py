@@ -3,6 +3,7 @@ from psim.math import Field, Vector2D
 from psim.particle import EParticleType, Particle
 from psim.simulation.simulation import Simulation
 import pygame as pg
+import math
 import psim as ps
 
 class ParticleSimulation(Simulation):
@@ -10,7 +11,7 @@ class ParticleSimulation(Simulation):
         super().__init__()
         self.entities: list[Particle] = [Particle(type=EParticleType.BLUE) for _ in range(numParticles)]
         self.label = "Particle Simulation"
-        self.resolution = 25
+        self.resolution = 50
         self.composeField()
     
     def composeField(self):
@@ -22,25 +23,27 @@ class ParticleSimulation(Simulation):
     def updateField(self):
         for i, f in enumerate(self.vecfield._field):
             if f:
-                if f[0] > 0:
-                    self.vecfield._field[i] = None
-                    neighs = self.vecfield.getNeighborIndices(i)
-                    for n in neighs:
-                        fn = self.vecfield._field[n]
-                        if fn:
-                            self.vecfield._field[n] = (self.vecfield._field[n][0] + f[0]/8, self.vecfield._field[n][1] + 1)
-                        else:
-                            self.vecfield._field[n] = (f[0]/8, 2)
-                else:
-                    self.vecfield._field[i] = None
+                self.vecfield._field[i] = (0, 0)
+                neighs = self.vecfield.getNeighborIndices(i)
+                for n in neighs:
+                    fn = self.vecfield._field[n]
+                    if fn:
+                        self.vecfield._field[n] = (self.vecfield._field[n][0] + f[0]/8, self.vecfield._field[n][1] + 1)
+                    else:
+                        self.vecfield._field[n] = (f[0]/8, 2)
 
         for e in self.entities:
             i, p = self.vecfield.valueAt(e.position)
             if i:
-                if p:
-                    self.vecfield._field[i] = (self.vecfield._field[i][0] + 1, self.vecfield._field[i][1] + 1)
+                val = 0
+                if e.type == EParticleType.BLUE:
+                    val = 1
                 else:
-                    self.vecfield._field[i] = (1,1)       
+                    val = -1
+                if p:
+                    self.vecfield._field[i] = (self.vecfield._field[i][0] + val, self.vecfield._field[i][1] + val)
+                else:
+                    self.vecfield._field[i] = (val, val)       
 
     def _handleInputEvents(self):
         super()._cursorEventCheck()
@@ -59,7 +62,6 @@ class ParticleSimulation(Simulation):
 
     def click_at(self, dx, dy, ext):
         self.entities.append(Particle(pos=Vector2D(dx, dy), type = EParticleType.BLUE if ext else EParticleType.RED))
-        print(self.vecfield.get(vec=(dx, dy)))
 
     # !Override ViewFrame! #
     def _inner_update(self):
@@ -84,19 +86,20 @@ class ParticleSimulation(Simulation):
                 continue
 
             # Statistics
-            if e.velocity > maxVel:
-                maxVel = e.velocity
-            elif e.velocity < minVel:
-                minVel = e.velocity
+            if e.velocity.magnitude() > maxVel:
+                maxVel = e.velocity.magnitude()
+            elif e.velocity.magnitude() < minVel:
+                minVel = e.velocity.magnitude()
             avgPosX += e.x
             avgPosY += e.y
             avgCount += 1
 
             # Apply G force
             self.iterativeGravity(i, e)
+            self.applyField(i, e)
 
             e.move()
-            avgVel += e.velocity
+            avgVel += e.velocity.magnitude()
         if avgCount == 0:
             avgCount = 1
         avgPosX = float(avgPosX / avgCount)
@@ -105,13 +108,40 @@ class ParticleSimulation(Simulation):
             ps.renderer.drawCircle(Vector2D(avgPosX, avgPosY), 10, color=ps.sysvals.COLORS['green'])
             for j, f in enumerate(self.vecfield._field):
                 if f:
-                    ps.renderer.drawRectRGB(self.vecfield.getCoordsAt(j, True), 0, min(255, f[0]*15), 0, self.vecfield.resolution)
+                    ps.renderer.drawRectRGB(self.vecfield.getCoordsAt(j, True), 0, min(255, max((f[0] * 15)+128, 0)), 0, self.vecfield.resolution)
         deleted = 0
         for d in dcache:
             if d in self.entities:
                 self.entities.remove(d)
                 deleted += 1
         return (minVel, maxVel, avgVel, avgCount, avgPosX, avgPosY)
+
+    def applyField(self, i: int, e: Particle):
+        j, v = self.vecfield.get(vec=e.position)
+        if j:
+            maxV, maxI = -1, -1
+            minV, minI = 999, 999
+            valT = 0
+            for n in self.vecfield.getNeighborIndices(j):
+                c = self.vecfield._field[n][0]
+                if c > maxV:
+                    maxV = c
+                    maxI = n
+                if c < minV:
+                    minI = n
+                    minV = c
+            if e.type == EParticleType.BLUE:
+                coords = self.vecfield.getCoordsAt(maxI, True)
+                valT = maxV
+                dist = e.position - coords
+            else:
+                coords = self.vecfield.getCoordsAt(minI, True)
+                valT = minV
+                dist = e.position - coords
+
+            dist = dist.normalize() * ps.sysvals.GRAV_CONST * math.sqrt(abs(valT))
+            ps.renderer.drawCircle(coords, 10, 'yellow')
+            e.velocity = e.velocity - dist
 
     def iterativeGravity(self, i, e):
         for p in self.entities[i+1:]:

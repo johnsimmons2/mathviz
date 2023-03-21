@@ -40,7 +40,6 @@ class App:
         mdl = state % len(self.views)
         if self.get(state):
             self.get().activate(False)
-            print(self.get().active, self.get().label)
             self.state = state
         elif self.get(mdl):
             self.get().activate(False)

@@ -43,6 +43,12 @@ class Vector2D(Vector):
     
     def magnitude(self):
         return math.sqrt((self.x**2) + (self.y**2))
+    
+    def normalize(self):
+        mag = self.magnitude()
+        self.x = self.x / mag
+        self.y = self.y / mag
+        return self
 
     def __eq__(self, other):
         if other:
@@ -85,6 +91,14 @@ class Vector2D(Vector):
             raise TypeError(f"Cannot add Vector2D and {type(other).__name__}")
         
     def __sub__(self, other):
+        if isinstance(other, Vector2D):
+            return Vector2D(self.x - other.x, self.y - other.y)
+        elif isinstance(other, tuple):
+            return Vector2D(self.x - other[0], self.y - other[1])
+        else:
+            raise TypeError(f"Cannot add Vector2D and {type(other).__name__}")
+    
+    def __rsub__(self, other):
         if isinstance(other, Vector2D):
             return Vector2D(self.x - other.x, self.y - other.y)
         elif isinstance(other, tuple):

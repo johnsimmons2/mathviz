@@ -19,7 +19,6 @@ RULES = {
             EBlockType.WATER: {'solid': True, 'mass': 1.0, 'color': 'blue'}
         }
 
-
 class Block:
     def __init__(self, pos, indx = 0, res = 0, type = EBlockType.NONE, ups = 0):
         self.index = indx
