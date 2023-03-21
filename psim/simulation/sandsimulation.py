@@ -13,13 +13,10 @@ class EBlockType(Enum):
     SAND = 1,
     WATER = 2
 
-WHITE = [255, 255, 255]
-ORANGE = [200, 90, 30]
-BLUE = [0, 60, 200]
 RULES = {
-            EBlockType.NONE: {'solid': False, 'mass': 0.0, 'color': WHITE},
-            EBlockType.SAND: {'solid': True, 'mass': 1.0, 'color': ORANGE},
-            EBlockType.WATER: {'solid': True, 'mass': 1.0, 'color': BLUE}
+            EBlockType.NONE: {'solid': False, 'mass': 0.0, 'color': 'white'},
+            EBlockType.SAND: {'solid': True, 'mass': 1.0, 'color': 'yellow'},
+            EBlockType.WATER: {'solid': True, 'mass': 1.0, 'color': 'blue'}
         }
 
 
@@ -31,7 +28,6 @@ class Block:
 
         self.mass = RULES[type]['mass']
         self.solid = RULES[type]['solid']
-        self.debugmode = False
         self.surfacetension = 0
         self.type = type
         self.updates = ups
@@ -60,26 +56,14 @@ class Block:
         return color
 
     def display(self):
-        color = self.get_color()
-        wth = self.resolution
-        pt = self.position
-        dx = (pt[0]*wth)
-        dy = (pt[1]*wth)
-        color[2] = 0 if self.solid else 255
-        pg.draw.rect(ps.getScreen(), tuple(color), pg.rect.Rect(dx, dy, wth, wth))
-        if self.debugmode:
-            txt = ps.getView().font.render(f'{pt}', True, (255,255 if self.solid else 0,0))
-            ofsx = (wth/2) - txt.get_rect().width/2
-            ofsy = (wth/2) - txt.get_rect().height/2
-            txtPos = (dx+ofsx, dy+ofsy)
-            ps.getScreen().blit(txt, txtPos)
+        ps.renderer.drawRect(Vector2D(self.position[0] * self.resolution, self.position[1] * self.resolution), width=self.resolution, color=self.get_color(), debug=ps.sysvals.VIEW.debugmode)
        
     def clicked(self, ext):
         self.setType(ext)
             
 class BlockField(Field):
     def __init__(self, resolution):
-        super().__init__(ps.getDims(), resolution)
+        super().__init__(ps.sysvals.getDims(), resolution)
         for i in range(self._field_size):
             self._field[i] = Block(self.getCoordsAt(i), i, resolution)
 
@@ -96,9 +80,9 @@ class SandSimulation(Simulation):
         self.updates = 0
         self.baseRules = [self.r_floor, self.r_updates]
         self.rules = {
-            EBlockType.NONE: {'solid': False, 'mass': 0.0, 'color': WHITE},
-            EBlockType.SAND: {'solid': True, 'mass': 1.0, 'color': ORANGE, 'rules': [self.r_solid_fall]},
-            EBlockType.WATER: {'solid': True, 'mass': 1.0, 'color': BLUE, 'rules': [self.r_solid_fall]}
+            EBlockType.NONE: {'solid': False, 'mass': 0.0, 'color': 'white'},
+            EBlockType.SAND: {'solid': True, 'mass': 1.0, 'color': 'yellow', 'rules': [self.r_solid_fall]},
+            EBlockType.WATER: {'solid': True, 'mass': 1.0, 'color': 'blue', 'rules': [self.r_solid_fall]}
         }
     
     def _inner_display(self):
@@ -130,6 +114,7 @@ class SandSimulation(Simulation):
 
     def _handleInputEvents(self):
         super()._cursorEventCheck()
+        super()._baseEventCheck()
         for e in self._events:
             match(e):
                 case InputEvent.MOUSE_CLICK_LEFT:

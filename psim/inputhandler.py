@@ -17,7 +17,8 @@ class InputEvent(Enum):
     KEY_RIGHT = 11,
     KEY_PRESS = 12,
     KEY_RELEASE = 13,
-    MOUSE_MOVE = 14
+    MOUSE_MOVE = 14,
+    KEY_D = 15
 
 CLICK_DOWN = False
 pts = []
@@ -49,6 +50,8 @@ def handleInput(event):
             eventType = InputEvent.KEY_LEFT
         elif event.key == pg.K_RIGHT:
             eventType = InputEvent.KEY_RIGHT
+        elif event.key == pg.K_d:
+            eventType = InputEvent.KEY_D
 
     elif event.type == pg.MOUSEBUTTONDOWN:
         CLICK_DOWN = True

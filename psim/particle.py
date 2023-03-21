@@ -27,9 +27,8 @@ class Particle:
         self.type = type
         self.x = self.position.x
         self.y = self.position.y
-        self.screen = ps.getScreen()
-        self.r, self.g, self.b = 0, 0, 0
-        self.debugmode = False
+        self.screen = ps.sysvals.getScreen()
+        self.color = self.setColors()
 
         self.dist = 0
         self.wavelength = 0
@@ -38,7 +37,7 @@ class Particle:
         self.thickness = 5
         self.active = True
         self.flagged = True
-        self.setColors()
+        
         self.gravityvec = Vector2DRot(0, 0)
         if type == EParticleType.RED:
             self.mass = 500
@@ -52,45 +51,24 @@ class Particle:
     def setColors(self):
         match(self.type):
             case EParticleType.NONE:
-                self.r = 255
-                self.g = 255
-                self.b = 255
-                return
+                return ps.sysvals.COLORS['black']
             case EParticleType.RED:
-                self.r = 255
-                self.g = 0
-                self.b = 0
-                return
+                return ps.sysvals.COLORS['red']
             case EParticleType.BLUE:
-                self.r = 0
-                self.g = 0
-                self.b = 255
-                return
+                return ps.sysvals.COLORS['blue']
             case EParticleType.GREEN:
-                self.r = 0
-                self.g = 255
-                self.b = 0
-                return
+                return ps.sysvals.COLORS['green']
             case EParticleType.PURPLE:
-                self.r = 255
-                self.g = 0
-                self.b = 255
-                return
+                return ps.sysvals.COLORS['purple']
 
     def update(self):
         pass
 
-    # !Overriding Entity! #
     def display(self):
-        global DEBUG
-        if DEBUG:
-            dx = ((math.sin(self.angle) * self.velocity) * 40) + self.position.x
-            dy = ((math.cos(self.angle) * self.velocity) * 40) + self.position.y
-            pg.draw.aaline(self.screen, (255,0,0), self.position, (dx, dy))
-            gx = ((math.sin(self.gravityvec.angle) * (self.gravityvec.dist + 1)) * 100) + self.position.x
-            gy = ((math.cos(self.gravityvec.angle) * (self.gravityvec.dist + 1)) * 100) + self.position.y
-            pg.draw.aaline(self.screen, (0,255,0), self.position, (gx, gy))
-        pg.draw.circle(self.screen, (self.r, self.g, self.b), self.position, self.size, self.thickness)
+        ps.renderer.drawVector2D(self.position, self.getDirection(), ps.sysvals.VIEW.debugmode, color=self.color)
+
+    def getDirection(self):
+        return Vector2D(self.velocity * math.sin(self.angle), self.velocity * math.cos(self.angle))
 
     def move(self):
         if abs(self.x) > 5000 or abs(self.y) > 5000:
@@ -127,15 +105,6 @@ class Particle:
             self.position = self.position + (math.sin(angle)*overlap, math.cos(angle)*overlap)
             p.position = p.position + (math.sin(angle - math.pi/2)*overlap, math.cos(angle - math.pi/2)*overlap)
     
-    def photocollision(self, p: Particle):
-        dx = self.x - p.x
-        dy = self.y - p.y
-        
-        dist = math.hypot(dx, dy)
-        if dist < self.size + p.size:
-            self.active = False
-            p.velocity = p.velocity / 2
-
     def gravity(self, other: Particle):
         dx = self.position.x - other.position.x
         dy = self.position.y - other.position.y

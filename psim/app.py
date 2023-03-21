@@ -4,7 +4,7 @@ import numpy as np
 import psim as ps
 from pygame import QUIT
 from psim.inputhandler import InputEvent, handleInput
-from psim.const import VIEW, WIDTH, HEIGHT, SCREEN
+from psim.const import sysvals
 
 class App:
     def __init__(self):
@@ -19,8 +19,7 @@ class App:
         if stats != None:
             stats = stats[0]
             txt = txt + f'{stats}'
-        text = VIEW.font.render(txt, True, (0, 0, 0))
-        SCREEN.blit(text, (5, ps.getDims()[1]-50))
+        ps.renderer.drawText(txt)
         pg.display.update()
 
     def addView(self, view):
@@ -67,12 +66,10 @@ def handleEvents(events: list, app: App):
 APP = App()
 
 def addSimulation(sim):
-    global APP, VIEW
     APP.addView(sim)
-    VIEW = APP.get()
+    sysvals.VIEW = APP.get()
 
 def start():
-    global SCREEN, APP, VIEW
     APP.set_caption('Particle Simulator')
 
     if APP.valid():
@@ -80,17 +77,5 @@ def start():
             APP.update()
             handleEvents(pg.event.get(), APP)
             APP.blank()
-            SCREEN = APP.get().display
-            VIEW = APP.get()
-
-def getScreen():
-    global SCREEN
-    return SCREEN
-
-def getDims():
-    global WIDTH, HEIGHT
-    return (WIDTH, HEIGHT)
-
-def getView():
-    global VIEW
-    return VIEW
+            sysvals.SCREEN = APP.get().display
+            sysvals.VIEW = APP.get()

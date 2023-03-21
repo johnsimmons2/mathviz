@@ -3,6 +3,7 @@ from psim.inputhandler import InputEvent
 from psim.particle import EParticleType
 from psim.math import Vector2D, Vector2DRot
 from psim.viewframe import ViewFrame
+from psim.const import sysvals
 import psim as ps
 import numpy as np
 import pygame as pg
@@ -16,13 +17,17 @@ import math
 class Simulation(ViewFrame):
     def __init__(self, width = None, height = None, fps = 144):
         super().__init__(width, height, fps)
+        if sysvals.SCREEN == None:
+            sysvals.SCREEN = ViewFrame().display
+        else:
+            sysvals.SCREEN = self.display
         self.vecfield = None
         self.resolution = None
         self.cursorSize = 1
         self.cursorMaxSize = 8
 
-    def clicked(self, dx, dy, ext: bool):
-        if self.resolution and self.vecfield:
+    def clicked(self, dx, dy, ext: bool, shouldClickNeighbor: bool = True):
+        if self.resolution and self.vecfield and shouldClickNeighbor:
             v = self.resolution
             clickLoc = self.vecfield.valueAt(Vector2D(dx, dy))
             if clickLoc and clickLoc[0]:
@@ -56,14 +61,20 @@ class Simulation(ViewFrame):
                     self.pause()
                     continue
 
+    def _baseEventCheck(self):
+        for e in self._events:
+            match(e):
+                case InputEvent.KEY_D:
+                    self.debugmode = not self.debugmode
+                    continue
+
     def clickneighbor(self, ext, tup = None):
         if tup:
             neighbor = self.vecfield[tup[0]]
-            if isinstance(neighbor, Entity):
-                neighbor.clicked(ext)
-                neighs = self.vecfield.getNeighborIndices(tup[0])
-                for n in neighs:
-                    self.vecfield[n].clicked(ext)
+            neighbor.clicked(ext)
+            neighs = self.vecfield.getNeighborIndices(tup[0])
+            for n in neighs:
+                self.vecfield[n].clicked(ext)
     
     @abstractmethod
     def click_at(self, dx, dy, ext):

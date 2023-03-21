@@ -25,7 +25,7 @@ from psim.simulation.sandsimulation import SandSimulation
 # UNITONS = getUnitons()
 
 def main():
-    psim.addSimulation(ParticleSimulation(50))
+    psim.addSimulation(ParticleSimulation(5))
     psim.addSimulation(FieldSimulation(50))
     psim.addSimulation(SandSimulation(15))
     psim.start()

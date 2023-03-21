@@ -16,27 +16,13 @@ class Fieldling:
         self.alive = False
         self.updates = 0
         self.aliveneighbors = 0
-        self.debugmode = False
     
     def clicked(self, ext: bool):
         self.alive = ext
     
     def display(self):
-        color = [0, 0, 0]
-        wth = self.resolution
-        color[1] = -1 * max(self.aliveneighbors*(255//9), 0) + 255
-        color[2] = 0 if self.alive else 255
-        color[0] = 0 if self.alive else 255 # min(point.velocity.magnitude(), 255)
-        pt = self.position
-        dx = (pt[0]*wth)
-        dy = (pt[1]*wth)
-        pg.draw.rect(ps.getScreen(), tuple(color), pg.rect.Rect(dx, dy, wth, wth))
-        if self.debugmode:
-            txt = ps.getView().font.render(f'{pt}', True, (255,0,0))
-            ofsx = (wth/2) - txt.get_rect().width/2
-            ofsy = (wth/2) - txt.get_rect().height/2
-            txtPos = (dx+ofsx, dy+ofsy)
-            ps.getScreen().blit(txt, txtPos)
+        color = 'blue' if self.alive else 'gray'
+        ps.renderer.drawRect(Vector2D(self.position[0] * self.resolution, self.position[1] * self.resolution), width=self.resolution, color=color, debug=ps.sysvals.VIEW.debugmode)
     
     def flip(self):
         self.alive = not self.alive
@@ -78,7 +64,7 @@ class Fieldling:
 
 class ParticleField(Field):
     def __init__(self, resolution):
-        super().__init__(ps.getDims(), resolution)
+        super().__init__(ps.sysvals.getDims(), resolution)
         for i in range(self._field_size):
             self._field[i] = Fieldling(i, self.getCoordsAt(i), Vector2D(np.random.rand()*255, np.random.rand()*255), resolution)
 
@@ -96,6 +82,7 @@ class FieldSimulation(Simulation):
     
     def _handleInputEvents(self):
         super()._cursorEventCheck()
+        super()._baseEventCheck()
         for e in self._events:
             match(e):
                 case InputEvent.MOUSE_CLICK_LEFT:

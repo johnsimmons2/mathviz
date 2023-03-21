@@ -212,7 +212,7 @@ class Field:
         self._adj_dims = (dims[0]//resolution, dims[1]//resolution)
         self._field_size = (dims[0]//resolution) * (dims[1]//resolution)
         self.resolution = resolution
-        self._field = [0 for _ in range(self._field_size)]
+        self._field = np.empty(self._field_size, dtype=np.object)
         self._poi = []
     
     def __getitem__(self, key):
@@ -247,6 +247,10 @@ class Field:
     
     def get(self, indx = None, vec = None):
         if vec != None:
+            i, res = self.valueAt(vec)
+            # If valueAt returns an index, then we know the result is valid regardless of its type.
+            if i:
+                return (i, res)
             res = self._get_index_of_vector(vec)
             if res < len(self._field):
                 return res, self._field[res]
@@ -298,5 +302,7 @@ class Field:
                 return (index, val)
         return None, None
 
-    def getCoordsAt(self, index):
+    def getCoordsAt(self, index, translate = False):
+        if translate:
+            return ((index % self._adj_dims[0]) * self.resolution, (index // self._adj_dims[0]) * self.resolution)
         return (index % self._adj_dims[0], (index // self._adj_dims[0]))

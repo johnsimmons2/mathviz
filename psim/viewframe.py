@@ -1,5 +1,5 @@
 import pygame as pg
-from psim.app import getDims
+from psim.const import sysvals
 from abc import abstractmethod
 from psim.inputhandler import InputEvent
 
@@ -11,8 +11,8 @@ class ViewFrame:
             self.width = width
             self.height = height
         else:
-            self.width = getDims()[0]
-            self.height = getDims()[1]
+            self.width = sysvals.getDims()[0]
+            self.height = sysvals.getDims()[1]
         self.FPSClock = pg.time.Clock()
         self.font = pg.font.Font('freesansbold.ttf', 16)
         self.entities: list = []
@@ -21,6 +21,7 @@ class ViewFrame:
         self.label = "entitylist"
         self.paused = False
         self.fps = fps
+        self.debugmode = False
         self.active = False
         self._fpp = 1/(fps)
         self._cachedupdaterate = self._fpp
@@ -57,8 +58,6 @@ class ViewFrame:
     def pause(self):
         self.paused = not self.paused
         self._t = pg.time.get_ticks()/1000.0
-        for e in self.entities:
-            e.debugmode = not e.debugmode
         if self.paused:
             self.fps = self._pausedfps
             self._fpp = (1/self._pausedfps)
@@ -90,9 +89,6 @@ class ViewFrame:
         else:
             self._t = pg.time.get_ticks()/1000.0
             return None
-    
-    def _draw_circle(self, color, position, size):
-        pg.draw.circle(self.display, color, position, size, size)
 
     @abstractmethod
     def _handleInputEvents(self):
