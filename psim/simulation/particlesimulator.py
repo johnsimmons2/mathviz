@@ -49,15 +49,16 @@ class ParticleSimulation(Simulation):
         super()._cursorEventCheck()
         super()._baseEventCheck()
         for e in self._events:
-            match(e):
-                case InputEvent.MOUSE_CLICK_LEFT:
-                    mx, my = pg.mouse.get_pos()
-                    self.clicked(mx, my, True, False)
-                    continue
-                case InputEvent.MOUSE_CLICK_RIGHT:
-                    mx, my = pg.mouse.get_pos()
-                    self.clicked(mx, my, False, False)
-                    continue
+            if e.type == pg.MOUSEBUTTONDOWN:
+                match(e.button):
+                    case pg.BUTTON_LEFT:
+                        mx, my = pg.mouse.get_pos()
+                        self.clicked(mx, my, True, False)
+                        continue
+                    case pg.BUTTON_RIGHT:
+                        mx, my = pg.mouse.get_pos()
+                        self.clicked(mx, my, False, False)
+                        continue
         self._events = []
 
     def click_at(self, dx, dy, ext):

@@ -48,23 +48,23 @@ class Simulation(ViewFrame):
 
     def _cursorEventCheck(self):
         for e in self._events:
-            match(e):
-                case InputEvent.KEY_UP:
+            match(e.key):
+                case pg.K_UP:
                     if self.cursorSize < self.cursorMaxSize:
                         self.cursorSize += 1
                     continue
-                case InputEvent.KEY_DOWN:
+                case pg.K_DOWN:
                     if self.cursorSize > 1:
                         self.cursorSize -= 1
                     continue
-                case InputEvent.KEY_SPACE:
+                case pg.K_SPACE:
                     self.pause()
                     continue
 
     def _baseEventCheck(self):
         for e in self._events:
-            match(e):
-                case InputEvent.KEY_D:
+            match(e.key):
+                case pg.K_d:
                     self.debugmode = not self.debugmode
                     continue
 

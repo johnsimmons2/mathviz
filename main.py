@@ -1,14 +1,22 @@
 import psim
+import random as rand
+import pysimmy
 from psim.simulation.fieldsimulation import FieldSimulation
 from psim.simulation.particlesimulator import ParticleSimulation
 from psim.simulation.sandsimulation import SandSimulation
+from pysimmy import View
+from pysimmy.Simulation import ParticleSimulator
 
 
 def main():
-    psim.addSimulation(ParticleSimulation(5))
-    psim.addSimulation(FieldSimulation(50))
-    psim.addSimulation(SandSimulation(15))
-    psim.start()
+    app = pysimmy.App(800, 600, 144)
+
+    view = View(800, 600, 144)
+    datalayer = pysimmy.getDataLayer()
+    cacheId = datalayer.createCache([{'x': rand.random()*800, 'y': rand.random()*600} for _ in range(10)])
+    app.addSimulation(ParticleSimulator(view, cacheId))
+
+    app.start()
 
 if __name__ == "__main__":
     main()

@@ -1,3 +1,4 @@
+from enum import Enum
 import pygame as pg
 from psim.const import sysvals
 from abc import abstractmethod
@@ -27,7 +28,7 @@ class ViewFrame:
         self._cachedupdaterate = self._fpp
         self._pausedfps = 144
         self._cachefps = fps
-        self._events = []
+        self._events: list[InputEvent] = []
         self._dt = 0
         self._t = pg.time.get_ticks()/1000
 
@@ -42,6 +43,7 @@ class ViewFrame:
         self._cachefps = fps
     
     def activate(self, val):
+        print(self.label, val, "test")
         self.active = val
         self._t = pg.time.get_ticks()/1000.0
     
@@ -68,7 +70,6 @@ class ViewFrame:
     def update(self):
         stats = []
         if self.active:
-            self._handleInputEvents()
             time = pg.time.get_ticks()/1000.0
             frametime = time - self._t
             self._dt += frametime
@@ -101,3 +102,69 @@ class ViewFrame:
     @abstractmethod
     def _inner_display(self):
         pass
+
+class OptionType(Enum):
+    DROPDOWN = 1
+    CHECKBOX = 2
+
+class OptionsView(ViewFrame):
+    def __init__(self, width=None, height=None, fps=30):
+        super().__init__(width, height, fps)
+        self.options = {
+            "Global Option 1": {
+                "type": OptionType.DROPDOWN,
+                "values": ["Option A", "Option B", "Option C"],
+                "selected": 0
+            },
+            "Global Option 2": {
+                "type": OptionType.CHECKBOX,
+                "value": False
+            },
+            # Add more options as needed
+        }
+        self.selected_option = 0  # Index of the currently selected option
+
+    def _handleInputEvents(self):
+        for event in self._events:
+            if event.key == pg.K_UP:
+                self.selected_option = (self.selected_option - 1) % len(self.options)
+            elif event.key == pg.K_DOWN:
+                self.selected_option = (self.selected_option + 1) % len(self.options)
+            elif event.key == pg.K_RETURN:
+                self._handleOptionSelect()
+
+    def _handleOptionSelect(self):
+        selected_option_data = self.options[list(self.options.keys())[self.selected_option]]
+        option_type = selected_option_data["type"]
+
+        if option_type == OptionType.DROPDOWN:
+            # Handle dropdown selection logic
+            selected_value = selected_option_data["values"][selected_option_data["selected"]]
+            print(f"Selected option: {selected_value}")
+        elif option_type == OptionType.CHECKBOX:
+            # Handle checkbox toggle logic
+            selected_option_data["value"] = not selected_option_data["value"]
+            print(f"Checkbox state: {selected_option_data['value']}")
+
+    def _inner_update(self):
+        pass
+
+    def _inner_display(self):
+        self.display.fill((255, 255, 255))  # Clear the screen
+
+        # Display options
+        y_offset = 50
+        for idx, (option_name, option_data) in enumerate(self.options.items()):
+            label = self.font.render(option_name, True, (0, 0, 0))
+            self.display.blit(label, (20, y_offset))
+
+            if idx == self.selected_option:
+                # Highlight the selected option
+                pg.draw.rect(self.display, (200, 200, 200), (150, y_offset, 200, 30))
+
+            y_offset += 40
+
+        pg.display.flip()
+
+    def click_at(self, dx, dy, ext):
+        pass  # Options view doesn't handle clicks for now

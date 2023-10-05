@@ -1,4 +1,4 @@
-from psim.inputhandler import InputEvent, isClickDown
+from psim.inputhandler import InputEvent
 from psim.math import Vector2D, Field, VectorPairList
 import psim as ps
 import math
@@ -85,16 +85,16 @@ class FieldSimulation(Simulation):
         super()._baseEventCheck()
         for e in self._events:
             match(e):
-                case InputEvent.MOUSE_CLICK_LEFT:
+                case pg.BUTTON_LEFT:
                     mx, my = pg.mouse.get_pos()
                     self.clicked(mx, my, True)
                     continue
-                case InputEvent.MOUSE_CLICK_RIGHT:
+                case pg.BUTTON_RIGHT:
                     mx, my = pg.mouse.get_pos()
                     self.clicked(mx, my, False)
                     continue
-                case InputEvent.MOUSE_MOVE:
-                    if isClickDown():
+                case pg.MOUSEMOTION:
+                    if pg.mouse.get_pressed() != (0, 0, 0):
                         mx, my = pg.mouse.get_pos()
                         self.clicked(mx, my, True)
                         continue

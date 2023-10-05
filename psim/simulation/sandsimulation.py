@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from psim.inputhandler import InputEvent, isClickDown
+from psim.inputhandler import InputEvent
 from psim.math import Field, Vector2D
 from psim.simulation.simulation import Simulation
 from enum import Enum
@@ -115,17 +115,17 @@ class SandSimulation(Simulation):
         super()._cursorEventCheck()
         super()._baseEventCheck()
         for e in self._events:
-            match(e):
-                case InputEvent.MOUSE_CLICK_LEFT:
+            match(e.button):
+                case pg.BUTTON_LEFT:
                     mx, my = pg.mouse.get_pos()
                     self.clicked(mx, my, EBlockType.WATER)
                     continue
-                case InputEvent.MOUSE_CLICK_RIGHT:
+                case pg.BUTTON_RIGHT:
                     mx, my = pg.mouse.get_pos()
                     self.clicked(mx, my, EBlockType.NONE)
                     continue
-                case InputEvent.MOUSE_MOVE:
-                    if isClickDown():
+                case pg.MOUSEMOTION:
+                    if pg.mouse.get_pressed() != (0, 0, 0):
                         mx, my = pg.mouse.get_pos()
                         self.clicked(mx, my, EBlockType.SAND)
                         continue

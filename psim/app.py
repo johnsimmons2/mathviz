@@ -5,17 +5,18 @@ import psim as ps
 from pygame import QUIT
 from psim.inputhandler import InputEvent, handleInput
 from psim.const import sysvals
+from psim.viewframe import ViewFrame
 
 class App:
     def __init__(self):
         pg.init()
         self.state = 0
-        self.views = []
+        self.views: list[ViewFrame] = []
+        self.handledEvents = []
     
     def update(self):
-        self.views[self.state].active = True
         stats = self.views[self.state].update()
-        txt = f'[View: {self.get().label}]'
+        txt = f'[View: {self.get().label} FPS: {self.get().fps} {"PAUSED" if self.get().paused else ""} {self.state+1}/{len(self.views)}]'
         if stats != None:
             stats = stats[0]
             txt = txt + f'{stats}'
@@ -25,7 +26,7 @@ class App:
     def addView(self, view):
         self.views.append(view)
     
-    def get(self, indx = None):
+    def get(self, indx = None) -> ViewFrame:
         if indx == None:
             return self.views[self.state]
         if indx >= 0 and indx < len(self.views):
@@ -37,16 +38,14 @@ class App:
         pg.display.set_caption(cap)
 
     def set(self, state):
-        mdl = state % len(self.views)
+        if state < 0 or state >= len(self.views):
+            return
         if self.get(state):
             self.get().activate(False)
             self.state = state
-        elif self.get(mdl):
-            self.get().activate(False)
-            self.state = mdl
         self.get().activate(True)
 
-    def valid(self):
+    def valid(self) -> bool:
         if len(self.views) > 0:
             return True
 
@@ -56,25 +55,34 @@ class App:
 def handleEvents(events: list, app: App):
     for event in events:
         ev = handleInput(event)
-        if ev == InputEvent.KEY_RIGHT:
-            app.set(app.state + 1)
-        elif ev == InputEvent.KEY_LEFT:
-            app.set(app.state - 1)
-        app.get().pushEvent(ev)
+        if ev.key not in app.handledEvents:
+            if ev.key == pg.K_RIGHT:
+                app.set(app.state + 1)
+                app.handledEvents.append(ev.key)
+            elif ev.key == pg.K_LEFT:
+                app.set(app.state - 1)
+                app.handledEvents.append(ev.key)
+            else:
+                app.get().pushEvent(ev)
+        else:
+            app.handledEvents.remove(ev.key)
 
 APP = App()
 
 def addSimulation(sim):
     APP.addView(sim)
     sysvals.VIEW = APP.get()
+    print('Added Simulation: ', sim.label)
+    print(sysvals.VIEW)
 
 def start():
+    global sysvals, APP
     APP.set_caption('Particle Simulator')
 
     if APP.valid():
         while True:
-            APP.update()
-            handleEvents(pg.event.get(), APP)
             APP.blank()
+            handleEvents(pg.event.get(), APP)
+            APP.update()
             sysvals.SCREEN = APP.get().display
             sysvals.VIEW = APP.get()
